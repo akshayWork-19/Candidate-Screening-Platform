@@ -1,0 +1,29 @@
+{
+    "name": "myn-screener-server",
+    "version": "1.0.0",
+    "description": "AI-powered candidate screening platform - myNachiketa GTM Engineering Intern assignment",
+    "main": "src/index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/index.js",
+        "dev": "nodemon src/index.js"
+    },
+    "dependencies": {
+        "@google/generative-ai": "^0.15.0",
+        "axios": "^1.7.2",
+        "cors": "^2.8.5",
+        "csv-parse": "^5.5.6",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "googleapis": "^173.0.0",
+        "groq-sdk": "^0.5.0",
+        "inngest": "^3.19.0",
+        "mongoose": "^8.5.0",
+        "multer": "^1.4.5-lts.1",
+        "nodemailer": "^9.0.3",
+        "pdf-parse": "^1.1.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.4"
+    }
+}
