@@ -1,8 +1,8 @@
 import express from "express";
 import multer from "multer";
 import { parseSpreadsheet, normalizeRow } from "../utils/parseSpreadsheet.js";
-import Candidate from "../models/Candidate.js";
-import JobDescription from "../models/JobDescription.js";
+import Candidate from "../models/candidate.js";
+import JobDescription from "../models/jobDescription.js";
 import { inngest } from "../inngest/inngestClient.js";
 
 

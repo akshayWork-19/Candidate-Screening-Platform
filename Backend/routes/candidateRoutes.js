@@ -1,5 +1,5 @@
 import express from "express";
-import Candidate from "../models/Candidate.js";
+import Candidate from "../models/candidate.js";
 
 const router = express.Router();
 
