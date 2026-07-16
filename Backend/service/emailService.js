@@ -2,6 +2,11 @@ import nodemailer from "nodemailer";
 import dns from "node:dns";
 
 dns.setDefaultResultOrder("ipv4first");
+console.log(await dns.promises.lookup("smtp.gmail.com", { all: true }));
+
+console.log(process.version);
+console.log(process.platform);
+console.log(process.arch);
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
@@ -40,6 +45,13 @@ export async function sendInterviewInviteEmail(candidate) {
     `,
     });
     return info;
+}
+
+try {
+    await transporter.verify();
+    console.log("SMTP verified");
+} catch (err) {
+    console.error("SMTP verify failed:", err);
 }
 
 export default { sendTestLinkEmail, sendInterviewInviteEmail };
