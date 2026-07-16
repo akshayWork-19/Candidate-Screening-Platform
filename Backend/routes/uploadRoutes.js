@@ -1,36 +1,45 @@
 import express from "express";
 import multer from "multer";
-import { parse } from "csv-parse/sync";
+import { parseSpreadsheet, normalizeRow } from "../utils/parseSpreadsheet.js";
 import Candidate from "../models/Candidate.js";
 import JobDescription from "../models/JobDescription.js";
-import { inngest } from "../inngest/client.js";
+import { inngest } from "../inngest/inngestClient.js";
+
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// 1. Upload candidate dataset CSV
+// 1. Upload candidate dataset - accepts .csv or .xlsx
 router.post("/candidates", upload.single("file"), async (req, res) => {
     try {
-        const records = parse(req.file.buffer, {
-            columns: true,
-            skip_empty_lines: true,
-            trim: true,
-        });
+        const rawRecords = parseSpreadsheet(req.file.buffer, req.file.originalname);
 
         const inserted = [];
-        for (const row of records) {
+        for (let i = 0; i < rawRecords.length; i++) {
+            const row = normalizeRow(rawRecords[i]);
+            const sNo = rawRecords[i].s_no ?? rawRecords[i]["S.No"] ?? i + 1;
+
+            // Match by sNo, not email - this sample dataset reuses one placeholder
+            // email across every row, so email alone would collapse all candidates
+            // into a single overwritten record.
             const candidate = await Candidate.findOneAndUpdate(
-                { email: row.Email || row.email },
+                { sNo },
                 {
-                    name: row.Name || row.name,
-                    email: row.Email || row.email,
-                    college: row.College || row.college,
-                    branch: row.Branch || row.branch,
-                    cgpa: parseFloat(row.CGPA || row.cgpa) || null,
-                    bestAiProject: row["Best AI Project"] || row.bestAiProject,
-                    researchWork: row["Research Work"] || row.researchWork,
-                    githubProfile: row["GitHub Profile"] || row.githubProfile,
-                    resumeLink: row["Resume Link"] || row.resumeLink,
+                    sNo,
+                    name: row.name,
+                    email: row.email,
+                    college: row.college,
+                    branch: row.branch,
+                    cgpa: parseFloat(row.cgpa) || null,
+                    bestAiProject: row.bestAiProject,
+                    researchWork: row.researchWork,
+                    githubProfile: row.githubProfile,
+                    resumeLink: row.resumeLink,
+                    // Some sample rows already carry test scores (even as formula
+                    // placeholders) - capture them now if present, and skip the
+                    // separate test-results upload step for those candidates later.
+                    ...(row.testLa !== undefined && { testLaScore: parseFloat(row.testLa) || 0 }),
+                    ...(row.testCode !== undefined && { testCodeScore: parseFloat(row.testCode) || 0 }),
                     status: "UPLOADED",
                 },
                 { upsert: true, new: true }
@@ -61,23 +70,23 @@ router.post("/job-description", express.json(), async (req, res) => {
     res.json(jd);
 });
 
-// 3. Upload test results CSV (fields: test_la, test_code, matched by email)
+// 3. Upload test results separately - accepts .csv or .xlsx, matched by sNo
+// (falls back to email if sNo isn't present in a given file)
 router.post("/test-results", upload.single("file"), async (req, res) => {
     try {
-        const records = parse(req.file.buffer, {
-            columns: true,
-            skip_empty_lines: true,
-            trim: true,
-        });
+        const rawRecords = parseSpreadsheet(req.file.buffer, req.file.originalname);
 
         let updated = 0;
-        for (const row of records) {
-            const email = row.Email || row.email;
+        for (const raw of rawRecords) {
+            const row = normalizeRow(raw);
+            const sNo = raw.s_no ?? raw["S.No"];
+            const query = sNo !== undefined ? { sNo } : { email: row.email };
+
             const candidate = await Candidate.findOneAndUpdate(
-                { email },
+                query,
                 {
-                    testLaScore: parseFloat(row.test_la) || 0,
-                    testCodeScore: parseFloat(row.test_code) || 0,
+                    testLaScore: parseFloat(row.testLa) || 0,
+                    testCodeScore: parseFloat(row.testCode) || 0,
                     status: "TEST_RESULT_RECEIVED",
                 },
                 { new: true }

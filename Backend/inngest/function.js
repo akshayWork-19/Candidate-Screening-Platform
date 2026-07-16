@@ -1,12 +1,12 @@
 import axios from "axios";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
-import { inngest } from "./client.js";
-import Candidate from "../models/Candidate.js";
-import JobDescription from "../models/JobDescription.js";
-import llmService from "../services/llmService.js";
-import githubService from "../services/githubService.js";
-import emailService from "../services/emailService.js";
-import calendarService from "../services/calendarService.js";
+import { inngest } from "./inngestClient.js";
+import Candidate from "../models/candidate.js";
+import JobDescription from "../models/jobDescription.js";
+import llmService from "../service/llmService.js";
+import githubService from "../service/githubService.js";
+import emailService from "../service/emailService.js";
+import { scheduleInterview } from "../service/calendarService.js";
 
 const W_JD = parseFloat(process.env.JD_SCORE_WEIGHT || 0.4);
 const W_GITHUB = parseFloat(process.env.GITHUB_SCORE_WEIGHT || 0.3);
@@ -226,7 +226,7 @@ export const finalizeAndSchedule = inngest.createFunction(
             startTime.setDate(startTime.getDate() + 1);
             startTime.setHours(11, 0, 0, 0);
 
-            const { eventId, meetLink } = await calendarService.scheduleInterview({
+            const { eventId, meetLink } = await scheduleInterview({
                 candidateName: candidate.name,
                 candidateEmail: candidate.email,
                 startTime,

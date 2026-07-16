@@ -2,8 +2,10 @@ import mongoose from "mongoose";
 
 const candidateSchema = new mongoose.Schema(
     {
+        sNo: Number, // external row identifier from source dataset - used as the real
+        // unique key, since sample data can have duplicate/placeholder emails
         name: String,
-        email: { type: String, required: true, unique: true },
+        email: { type: String, required: true }, // NOT unique - sample data reuses one email
         college: String,
         branch: String,
         cgpa: Number,
@@ -76,4 +78,5 @@ const candidateSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-export default mongoose.model("Candidate", candidateSchema);
+const Candidate = mongoose.models.Candidate || mongoose.model("Candidate", candidateSchema);
+export default Candidate;

@@ -10,4 +10,4 @@ const jdSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-export default mongoose.model("JobDescription", jdSchema);
+export default mongoose.models.JobDescription || mongoose.model("JobDescription", jdSchema);

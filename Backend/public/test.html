@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Assessment - myNachiketa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 640px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #1a1a2e;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+        }
+
+        .question {
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .question p {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin: 6px 0;
+            cursor: pointer;
+        }
+
+        input[type=email] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .success {
+            background: #e6f9ee;
+            color: #14532d;
+        }
+
+        .error {
+            background: #fdeaea;
+            color: #7f1d1d;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Assessment</h1>
+    <p>Enter your email (the one you were contacted on) and complete the questions below.</p>
+    <input type="email" id="email" placeholder="you@example.com" required />
+    <div id="questions">Loading questions...</div>
+    <button id="submitBtn" onclick="submitTest()">Submit Assessment</button>
+    <div id="result"></div>
+
+    <script>
+        // Uses a relative path so this works identically in local dev and once deployed
+        const API_BASE = window.location.origin + "/api/test";
+        let questions = [];
+
+        async function loadQuestions() {
+            const res = await fetch(`${API_BASE}/questions`);
+            questions = await res.json();
+            const container = document.getElementById("questions");
+            container.innerHTML = questions.map((q, i) => `
+      <div class="question">
+        <p>${i + 1}. ${q.text}</p>
+        ${q.options.map((opt, oi) => `
+          <label>
+            <input type="radio" name="${q.id}" value="${oi}" />
+            ${opt}
+          </label>
+        `).join("")}
+      </div>
+    `).join("");
+        }
+
+        async function submitTest() {
+            const email = document.getElementById("email").value.trim();
+            const resultDiv = document.getElementById("result");
+            const btn = document.getElementById("submitBtn");
+
+            if (!email) {
+                resultDiv.className = "error";
+                resultDiv.textContent = "Please enter your email.";
+                return;
+            }
+
+            const answers = {};
+            for (const q of questions) {
+                const selected = document.querySelector(`input[name="${q.id}"]:checked`);
+                answers[q.id] = selected ? parseInt(selected.value) : null;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "Submitting...";
+
+            try {
+                const res = await fetch(`${API_BASE}/submit`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, answers }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || "Submission failed");
+
+                resultDiv.className = "success";
+                resultDiv.textContent = "Assessment submitted successfully! You'll hear back from us soon.";
+                btn.style.display = "none";
+            } catch (err) {
+                resultDiv.className = "error";
+                resultDiv.textContent = err.message;
+                btn.disabled = false;
+                btn.textContent = "Submit Assessment";
+            }
+        }
+
+        loadQuestions();
+    </script>
+</body>
+
+</html>
