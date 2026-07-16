@@ -1,5 +1,5 @@
 import express from "express";
-import Candidate from "../models/Candidate.js";
+import Candidate from "../models/candidate.js";
 import { QUESTIONS, publicQuestions } from "../utils/testSubmission.js";
 import { inngest } from "../inngest/inngestClient.js";
 
