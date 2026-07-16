@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 function App() {
   const [candidates, setCandidates] = useState([]);
@@ -56,7 +56,7 @@ function App() {
 
     const formData = new FormData();
     formData.append('file', file);
-    
+
     setUploadMessage(`Uploading to ${endpoint}...`);
     try {
       const res = await fetch(`${API_BASE}/upload/${endpoint}`, {
@@ -106,21 +106,21 @@ function App() {
             <form onSubmit={handleJobSubmit}>
               <div className="form-group">
                 <label>Job Title</label>
-                <input 
-                  type="text" 
-                  value={jobTitle} 
-                  onChange={(e) => setJobTitle(e.target.value)} 
+                <input
+                  type="text"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
                   placeholder="e.g. Senior Frontend Engineer"
-                  required 
+                  required
                 />
               </div>
               <div className="form-group">
                 <label>Job Requirements</label>
-                <textarea 
-                  value={jobText} 
-                  onChange={(e) => setJobText(e.target.value)} 
+                <textarea
+                  value={jobText}
+                  onChange={(e) => setJobText(e.target.value)}
                   placeholder="Paste the detailed job description here..."
-                  required 
+                  required
                 />
               </div>
               <button type="submit" className="btn">Save JD</button>
